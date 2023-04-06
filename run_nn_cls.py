@@ -10,7 +10,10 @@ from datasets.data_scan import ScanObjectNN
 from datasets.data_mn40 import ModelNet40
 from utils import *
 from models import Point_NN
-
+import sys
+import os
+sys.path.append('/home/chenxiang/code/Point-NN')
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 
 def get_arguments():
@@ -38,7 +41,6 @@ def get_arguments():
 
 @torch.no_grad()
 def main():
-
     print('==> Loading args..')
     args = get_arguments()
     print(args)
@@ -126,7 +128,6 @@ def main():
             best_acc, best_gamma = acc, gamma
 
     print(f"Point-NN's classification accuracy: {best_acc:.2f}.")
-
 
 if __name__ == '__main__':
     main()
