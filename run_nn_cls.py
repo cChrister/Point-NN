@@ -25,21 +25,18 @@ def get_arguments():
     # parser.add_argument('--split', type=int, default=1)
     # parser.add_argument('--split', type=int, default=2)
     parser.add_argument('--split', type=int, default=3)
-
     parser.add_argument('--bz', type=int, default=16)  # Freeze as 16
-
     parser.add_argument('--points', type=int, default=1024)
     parser.add_argument('--stages', type=int, default=4)
     parser.add_argument('--dim', type=int, default=72)
     parser.add_argument('--k', type=int, default=90)
     parser.add_argument('--alpha', type=int, default=1000)
     parser.add_argument('--beta', type=int, default=100)
-
     args = parser.parse_args()
     return args
     
-
-@torch.no_grad()
+# 不计算梯度，不在反向传播记录中
+@torch.no_grad() # https://blog.csdn.net/weixin_46559271/article/details/105658654
 def main():
     print('==> Loading args..')
     args = get_arguments()
@@ -53,8 +50,7 @@ def main():
     point_nn.eval()
 
 
-    print('==> Preparing data..')
-
+    print('==> Preparing data..')   # DataLoader
     if args.dataset == 'scan':
         train_loader = DataLoader(ScanObjectNN(split=args.split, partition='training', num_points=args.points), 
                                     num_workers=8, batch_size=args.bz, shuffle=False, drop_last=False)
@@ -68,9 +64,9 @@ def main():
 
 
     print('==> Constructing Point-Memory Bank..')
-
     feature_memory, label_memory = [], []
     # with torch.no_grad():
+    # tqdm可视化进度条
     for points, labels in tqdm(train_loader):
         
         points = points.cuda().permute(0, 2, 1)
@@ -91,7 +87,6 @@ def main():
 
 
     print('==> Saving Test Point Cloud Features..')
-    
     test_features, test_labels = [], []
     # with torch.no_grad():
     for points, labels in tqdm(test_loader):

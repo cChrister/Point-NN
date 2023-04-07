@@ -82,12 +82,14 @@ class PosE_Initial(nn.Module):
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.alpha, self.beta = alpha, beta
+        # alpha=1000, beta=100, in_dim=3, out_dim=72
+        # torch.div 张量和标量做逐元素除法
 
     def forward(self, xyz):
         B, _, N = xyz.shape    
-        feat_dim = self.out_dim // (self.in_dim * 2)
-        
-        feat_range = torch.arange(feat_dim).float().cuda()     
+        feat_dim = self.out_dim // (self.in_dim * 2) # [12] sin值需要12个？
+        feat_range = torch.arange(feat_dim).float().cuda() # [12]  
+        # 这里的alpha和beta和论文中是相反的
         dim_embed = torch.pow(self.alpha, feat_range / feat_dim)
         div_embed = torch.div(self.beta * xyz.unsqueeze(-1), dim_embed)
 
@@ -139,6 +141,7 @@ class EncNP(nn.Module):
         # Raw-point Embedding
         self.raw_point_embed = PosE_Initial(3, self.embed_dim, self.alpha, self.beta)
 
+        # 为什么进行knn之前要进行FPS
         self.FPS_kNN_list = nn.ModuleList() # FPS, kNN
         self.LGA_list = nn.ModuleList() # Local Geometry Aggregation
         self.Pooling_list = nn.ModuleList() # Pooling
@@ -184,8 +187,8 @@ class Point_NN(nn.Module):
 
     def forward(self, x):
         # xyz: point coordinates
-        # x: point features
-        xyz = x.permute(0, 2, 1)
+        # x: point features 什么逆天变量名
+        xyz = x.permute(0, 2, 1) # [16,1024,3]
 
         # Non-Parametric Encoder
         x = self.EncNP(xyz, x)
