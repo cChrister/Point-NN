@@ -46,6 +46,17 @@ def load_data(partition):
 
     return all_data, all_label
 
+# here you need to modify the h5file name
+def load_my_data(partition):
+    if partition=="train":
+        f = h5py.File("training_objectdataset_SO3.h5",'r')
+    else:
+        f = h5py.File("test_objectdataset_SO3.h5",'r')
+    all_data = f['data'][:].astype('float32')
+    all_label = f['label'][:].astype('int64')
+    f.close()
+    return all_data, all_label
+
 
 def random_point_dropout(pc, max_dropout_ratio=0.875):
     ''' batch_pc: BxNx3 '''
@@ -76,6 +87,25 @@ def jitter_pointcloud(pointcloud, sigma=0.01, clip=0.02):
 class ModelNet40(Dataset):
     def __init__(self, num_points, partition='train'):
         self.data, self.label = load_data(partition)
+        self.num_points = num_points
+        self.partition = partition   
+        
+
+    def __getitem__(self, item):
+        pointcloud = self.data[item][:self.num_points]
+        label = self.label[item]
+        if self.partition == 'train':
+            # pointcloud = random_point_dropout(pointcloud) # open for dgcnn not for our idea  for all
+            # pointcloud = translate_pointcloud(pointcloud)
+            np.random.shuffle(pointcloud)
+        return pointcloud, label
+
+    def __len__(self):
+        return self.data.shape[0]
+    
+class ModelNet40_myself(Dataset):
+    def __init__(self, num_points, partition='train'):
+        self.data, self.label = load_my_data(partition)
         self.num_points = num_points
         self.partition = partition   
         
